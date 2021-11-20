@@ -49,6 +49,8 @@ type program = block
 
 (***********************************************************************)
 open List
+open Printf
+   
 (* Opens the file `filename` and reads all the lines.
 Returns a list that associates each line with its line number. *)  
 let read_all_lines (filename:string) : (int * string) list =
@@ -58,6 +60,20 @@ let read_all_lines (filename:string) : (int * string) list =
     | Some s -> read_lines ((p, s)::acc) (p+1)
     | None -> close_in in_chan; List.rev acc in
   read_lines [] 1 (* the first line is number 1 *)
+
+(* changes the list from (int*string) to (int*(string list)) by seperating
+the line into words. Doesn't remove the empty strings (in between the spaces 
+if there are several next to each other) *)
+let lines_to_words lines =
+  let to_words l =
+    let position, str = l in
+    position, String.split_on_char ' ' str in
+  map (fun l -> to_words l) lines
+
+(* remove all the lines that have the COMMENT key-word inside *)
+let remove_comments lines =
+  filter (fun l -> let p,w = l in not (mem "COMMENT" w)) lines
+
 
 (* computes the indentation of a line of words.
 The identation is the number of spaces / 2 at the beginning of the line *)
@@ -88,6 +104,7 @@ let rec parse_expr words =
     try Num(int_of_string s), tl words
     with Failure _ -> Var(s), tl words            
 
+(* parse the list of words to get the condition and return it *)
 let parse_cond words =
   let e1, rest = parse_expr words in
   let cmp_word = hd rest in
@@ -102,14 +119,60 @@ let parse_cond words =
     | ">=" -> Ge
     | _ -> raise (Failure "Invalid comparaison operator in condition") in
   e1, cmp, e2
+
+(* returns true if the next line begins by ELSE, false otherwise *)
+let next_line_is_else lines =
+  if lines = [] then false
+  else
+    let _, s = hd lines in
+    let s = filter (fun k -> k <> "") s in
+    if s = [] then false
+    else if hd s = "ELSE" then true
+    else false
                         
+let rec parse_instruction position s lines =
+  let fail = ksprintf failwith "Invalid line %d" position in
+  let indent = compute_indent s in
+  let words = filter (fun k -> k <> "") s in
+  match words with
+  | "READ"::_ -> if length words = 2 then Read(nth words 2), tl lines
+              else fail
+  | "PRINT"::_ -> if length words < 2 then fail
+               else let e, _ = parse_expr (tl words) in
+                    Print(e), tl lines
+  | "IF"::_ ->
+     let condition = parse_cond (tl words) in
+     let block, rest_of_lines = parse_block (tl lines) (indent+1) [] in
+     if next_line_is_else rest_of_lines then
+       let block2, rest_of_lines2= parse_block (tl rest_of_lines) (indent+1) [] in
+       If(condition, block, block2), rest_of_lines2
+     else If(condition, block, []), rest_of_lines
+  | "WHILE"::_ -> let condition = parse_cond (tl words) in
+               let block, rest_of_lines = parse_block (tl lines) (indent+1) [] in
+               While(condition, block), rest_of_lines
+  | x::":="::_ ->
+           let e, _ = parse_expr (tl (tl words)) in
+           Set(x, e), tl lines
+  | _ -> fail
+and parse_block lines indent acc =
+  let position, s = hd lines in
+  let i2 = compute_indent s in
+  if i2 = indent then
+    let new_instr, rest_of_lines = parse_instruction position s lines in
+    let acc = (position, new_instr)::acc in
+    parse_block rest_of_lines indent acc
+  else List.rev acc, lines
 
-
-(* *)
+      
 let read_polish (filename:string) : program = 
   (* read all the lines and associate them with their line numbers *)
-  let lines_list = read_all_lines filename in
+  let lines = read_all_lines filename in
+  let lines_words = lines_to_words lines in
+  let lines_clean = remove_comments lines_words in
+  let prgm, _ = parse_block lines_clean 0 [] in
+  prgm
 
+(**********************************************************************************)
                                             
 let print_polish (p:program) : unit = failwith "TODO"
 
