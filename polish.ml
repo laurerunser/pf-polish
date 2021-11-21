@@ -173,9 +173,61 @@ let read_polish (filename:string) : program =
   prgm
 
 (**********************************************************************************)
-                                            
-let print_polish (p:program) : unit = failwith "TODO"
+let rec print_indent i =
+  match i with
+  | 0 -> printf "\n"
+  | n -> printf "  "; print_indent (n-1)
 
+let print_op op = match op with
+  | Add -> printf "+ "
+  | Sub -> printf "- "
+  | Mul -> printf "* "
+  | Div -> printf "/ "
+  | Mod -> printf "%%" (* % is a special char, need to escape it *)
+
+let print_comp comp = match comp with
+  | Eq -> printf " = "
+  | Ne -> printf " <> "
+  | Lt -> printf " < "
+  | Le -> printf " <= "
+  | Gt -> printf " > "
+  | Ge -> printf " >= "
+         
+let rec print_expr expr =
+  match expr with
+  | Num(i) -> printf "%d\n" i
+  | Var(n) -> printf "%s\n" n
+  | Op(op, e1, e2) -> print_op op; print_expr e1; printf " ";
+                      print_expr e2; printf "\n"
+
+let print_cond condition =
+  let e1, comp, e2 = condition in
+  print_expr e1; print_comp comp; print_expr e2; printf "\n"
+                        
+                        
+let rec print_block block indent =
+  match block with
+  | [] -> printf "\n"
+  | i::xs -> print_line i indent; print_block xs indent
+and print_line line indent =
+  print_indent indent;
+  let position, instruction = line in
+  match instruction with
+  | Set(name, expr) -> printf "%s := " name; print_expr expr;
+  | Read(name) -> printf "READ %s\n" name
+  | Print(expr) -> printf "PRINT "; print_expr expr
+  | If(condition, block, block2) ->
+     printf "IF "; print_cond condition;
+     print_block block (indent+1);
+     if block2 <> [] then
+       printf "ELSE\n"; print_block block2 (indent+1)
+  | While(condition, block) ->
+     printf "WHILE "; print_cond condition;
+     print_block block (indent+1)
+
+let print_polish (p:program) : unit = print_block p 0
+
+(**********************************************************************************)
 let eval_polish (p:program) : unit = failwith "TODO"
 
 let usage () =
