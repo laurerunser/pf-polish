@@ -53,13 +53,22 @@ open Printf
    
 (* Opens the file `filename` and reads all the lines.
 Returns a list that associates each line with its line number. *)  
-let read_all_lines (filename:string) : (int * string) list =
-  let in_chan = open_in filename in
+let read_all_lines (filename:string) : (string) list =
+(*  let in_chan = open_in filename in
   let try_read = try Some (input_line in_chan) with End_of_file -> None in
   let rec read_lines acc p = match try_read with
     | Some s -> read_lines ((p, s)::acc) (p+1)
     | None -> close_in in_chan; List.rev acc in
-  read_lines [] 1 (* the first line is number 1 *)
+    printf "read all the lines\n";
+  read_lines [] 1 (* the first line is number 1 *) *)
+  let ic = open_in filename in
+  let try_read () =
+    try Some (input_line ic) with End_of_file -> None in
+  let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None -> close_in ic; List.rev acc in
+  loop []
+
 
 (* changes the list from (int*string) to (int*(string list)) by seperating
 the line into words. Doesn't remove the empty strings (in between the spaces 
@@ -131,13 +140,13 @@ let next_line_is_else lines =
     else false
                         
 let rec parse_instruction position s lines =
-  let fail = ksprintf failwith "Invalid line %d" position in
+  let fail p = ksprintf failwith "Invalid line %d" p in
   let indent = compute_indent s in
   let words = filter (fun k -> k <> "") s in
   match words with
-  | "READ"::_ -> if length words = 2 then Read(nth words 2), tl lines
-              else fail
-  | "PRINT"::_ -> if length words < 2 then fail
+  | "READ"::_ -> if length words = 2 then Read(nth words 1), tl lines
+              else fail position
+  | "PRINT"::_ -> if length words < 2 then fail position
                else let e, _ = parse_expr (tl words) in
                     Print(e), tl lines
   | "IF"::_ ->
@@ -153,21 +162,28 @@ let rec parse_instruction position s lines =
   | x::":="::_ ->
            let e, _ = parse_expr (tl (tl words)) in
            Set(x, e), tl lines
-  | _ -> fail
+  | "COMMENT"::_ ->
+     let new_p, new_s = hd lines in
+     parse_instruction new_p new_s (tl lines)
+  | _ -> fail position
 and parse_block lines indent acc =
-  let position, s = hd lines in
-  let i2 = compute_indent s in
-  if i2 = indent then
-    let new_instr, rest_of_lines = parse_instruction position s lines in
-    let acc = (position, new_instr)::acc in
-    parse_block rest_of_lines indent acc
-  else List.rev acc, lines
+  if lines = [] then List.rev acc, []
+  else 
+    let position, s = hd lines in
+    let i2 = compute_indent s in
+    if i2 = indent then
+      let new_instr, rest_of_lines = parse_instruction position s lines in
+      let acc = (position, new_instr)::acc in
+      parse_block rest_of_lines indent acc
+    else List.rev acc, lines
 
       
-let read_polish (filename:string) : program = 
+let read_polish (filename:string) : program =
   (* read all the lines and associate them with their line numbers *)
   let lines = read_all_lines filename in
-  let lines_words = lines_to_words lines in
+  let lines_with_positions =
+    mapi (fun k str -> (k, str)) lines in
+  let lines_words = lines_to_words lines_with_positions in
   let lines_clean = remove_comments lines_words in
   let prgm, _ = parse_block lines_clean 0 [] in
   prgm
@@ -236,7 +252,7 @@ let usage () =
 
 let main () =
   match Sys.argv with
-  | [|_;"-reprint";file|] -> print_polish (read_polish file)
+  | [|_;"-reprint";file|] -> print_polish  (read_polish file)
   | [|_;"-eval";file|] -> eval_polish (read_polish file)
   | _ -> usage ()
 
