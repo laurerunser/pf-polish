@@ -12,7 +12,7 @@ let print_op op = match op with
   | Sub -> printf "- "
   | Mul -> printf "* "
   | Div -> printf "/ "
-  | Mod -> printf "%%" (* % is a special char, need to escape it *)
+  | Mod -> printf "%% " (* % is a special char, need to escape it *)
 
 let print_comp comp = match comp with
   | Eq -> printf " = "
