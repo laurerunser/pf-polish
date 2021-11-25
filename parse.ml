@@ -46,39 +46,60 @@ let compute_indent (words:string list) : int =
   in (loop words 0) / 2
 
 
+let rec print_arr w =
+  match w with
+  | [] -> print_string "ok\n"
+  | x::xs -> printf "%s " x; print_arr xs       
+ 
+
 (* parse the list of words to get the arithmetic expression
 Returns the expr and a list of the rest of the words  *)
 let rec parse_expr words =
-  let s = hd words in
-  let ops = ["+"; "-"; "*"; "/"; "%"] in
-  if (mem s ops) then
-    let e, rest = parse_expr (tl words) in
-    let e2, _ = parse_expr rest in
-    match s with
-    | "+" -> Op(Add, e, e2), []
-    | "-" -> Op(Sub, e, e2), []
-    | "*" -> Op(Mul, e, e2), []
-    | "/" -> Op(Div, e, e2), []
-    | "%" -> Op(Mod, e, e2), []
-    | _ -> raise (Failure "Invalid operator in expr")
+  if words = [] then failwith "Invalid line"
   else
-    try Num(int_of_string s), tl words
-    with Failure _ -> Var(s), tl words            
+    let s = hd words in
+    let ops = ["+"; "-"; "*"; "/"; "%"] in
+    if (mem s ops) then
+      let e, rest = parse_expr (tl words) in
+      let e2, _ = parse_expr rest in
+      match s with
+      | "+" -> Op(Add, e, e2), []
+      | "-" -> Op(Sub, e, e2), []
+      | "*" -> Op(Mul, e, e2), []
+      | "/" -> Op(Div, e, e2), []
+      | "%" -> Op(Mod, e, e2), []
+      | _ -> raise (Failure "Invalid operator in expr")
+    else
+      let i = try Num(int_of_string s)
+              with Failure _ -> Var(s) in
+      i, (tl words)
 
-(* parse the list of words to get the condition and return it *)
+
+
+(* Finds the comparaison operator in the list of words.
+Returns the operator and 2 lists :
+- the first one contains the elements before the operator in the original list
+- the second one contains the elements after the operator in the original list*)
+let find_cmp_and_partition words =
+  let rec loop acc l =
+    match l with
+    | [] -> failwith "No comparaison operator in the condition\n"
+    | x::xs ->
+       match x with
+       | "=" -> Eq, List.rev acc, xs
+       | "<>" -> Ne, List.rev acc, xs
+       | "<" -> Lt, List.rev acc, xs
+       | "<=" -> Le, List.rev acc, xs
+       | ">" -> Gt, List.rev acc, xs
+       | ">=" -> Ge, List.rev acc, xs
+       | _ -> loop (x::acc) xs
+  in loop [] words
+
+(* Parses the list of words into a condition*)
 let parse_cond words =
-  let e1, rest = parse_expr words in
-  let cmp_word = hd rest in
-  let e2, rest = parse_expr (tl rest) in
-  let cmp = 
-    match cmp_word with
-    | "=" -> Eq
-    | "<>" -> Ne
-    | "<" -> Lt
-    | "<=" -> Le
-    | ">" -> Gt
-    | ">=" -> Ge
-    | _ -> raise (Failure "Invalid comparaison operator in condition") in
+  let cmp, l1, l2 = find_cmp_and_partition words in
+  let e1, _ = parse_expr l1 in
+  let e2, _ = parse_expr l2 in
   e1, cmp, e2
 
 (* returns true if the next line begins by ELSE, false otherwise *)
