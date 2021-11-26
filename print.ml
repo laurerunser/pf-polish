@@ -31,21 +31,7 @@ let rec print_expr expr=
 
 let print_cond condition =
   let e1, comp, e2 = condition in
-  print_expr e1; print_comp comp; print_expr e2
-
-  (*let rec print_expr expr newline =
-  match expr with
-  | Num(i) -> printf "%d\n" i;
-  | Var(n) -> printf "%s\n" n;
-  | Op(op, e1, e2) -> print_op op; print_expr e1 false; printf " ";
-                      print_expr e2 false;
-  if newline then printf "\n"
-
-let print_cond condition newline =
-  let e1, comp, e2 = condition in
-  print_expr e1 false; print_comp comp; print_expr e2 false;
-  if newline then printf "\n"*)
-                        
+  print_expr e1; print_comp comp; print_expr e2                   
                         
 let rec print_block block indent =
   match block with

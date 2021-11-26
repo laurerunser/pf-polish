@@ -4,9 +4,9 @@ open Print
 
 let read_polish filename = Parse.parse_file filename
 
-let print_polish (p:program) : unit = print_block p 0
+let print_polish p = print_block p 0
 
-let eval_polish (p:program) : unit = failwith "TODO"
+let eval_polish p = failwith "TODO"
 
 let usage () =
   print_string "Polish : analyse statique d'un mini-langage\n";
@@ -18,5 +18,4 @@ let main () =
   | [|_;"-eval";file|] -> eval_polish (read_polish file)
   | _ -> usage ()
 
-(* lancement de ce main *)
 let () = main ()
