@@ -1,7 +1,6 @@
 (* Module Main : the entry point of the project. 
-This module receives the CLI arguments and launches the corresponding methods.
+This module receives the CLI arguments and launches the corresponding methods.*)
 
-See README for a complete explanation of the arguments. *)
 open Polish
 
 val read_polish : string -> program

@@ -1,7 +1,11 @@
 open Polish
 open List
 open Printf
-    
+
+(* [read_all_lines filename] reads all the lines from that file 
+and returns them in a list.
+This methods does NOT handle errors in opening the file, it assumes
+the file exists and can be opened. *)                                  
 let read_all_lines (filename:string) : (string) list =
   let ic = open_in filename in
   let try_read () =
@@ -10,16 +14,31 @@ let read_all_lines (filename:string) : (string) list =
     | Some s -> loop (s :: acc)
     | None -> close_in ic; List.rev acc in
   loop []
+  
 
+(* [lines_to_words lines] splits each line into words.
+- lines is a list that associate each line number with its line
+- the empty words (if there are 2 spaces next to each other) are not removed *)
 let lines_to_words lines =
   let to_words l =
     let position, str = l in
     position, String.split_on_char ' ' str in
   map (fun l -> to_words l) lines
 
+
+(* [remove_comments lines] removes all the lines that contain the
+word "COMMENT" from the list (even if it is not the first word of the line). 
+
+Possible amelioration : only remove the line if "COMMENT" is the first word.
+But that would add a lot of work for nothing. I think it is better to treat
+"COMMENT" as a restricted keyword of the language. *)
 let remove_comments lines =
   filter (fun l -> let p,w = l in not (mem "COMMENT" w)) lines
 
+
+(* [compute_indent words] computes the identation of a list of words.
+The identation is half of the number of empty words at the beginning of the list
+(nb empty words / 2). *)
 let compute_indent (words:string list) : int =
   let rec loop w acc = match w with
     | [] -> acc
@@ -27,6 +46,9 @@ let compute_indent (words:string list) : int =
     | x::xs -> acc
   in (loop words 0) / 2
 
+
+(* [parse_expr words] parses the list of words into an expression.
+Fails if the expression cannot be parsed. *)                                    
 let rec parse_expr words =
   if words = [] then failwith "Invalid line"
   else
@@ -47,6 +69,14 @@ let rec parse_expr words =
               with Failure _ -> Var(s) in
       i, (tl words)
 
+
+(* [find_cmp_and_partition words] finds the comparaison operation in the list
+of words. Then it partitions the list to get 2 sublists :
+- the first one with all the elements that come before the operator in the list
+- the second one with all the elements that come after the operator in the list
+The operator is in neither of the two new sublists.
+
+Fails if it cannot find an operator in the words list. *)
 let find_cmp_and_partition words =
   let rec loop acc l =
     match l with
@@ -62,12 +92,17 @@ let find_cmp_and_partition words =
        | _ -> loop (x::acc) xs
   in loop [] words
 
+
+(* [parse_cond words] parses the list of word into a condition *)  
 let parse_cond words =
   let cmp, l1, l2 = find_cmp_and_partition words in
   let e1, _ = parse_expr l1 in
   let e2, _ = parse_expr l2 in
   e1, cmp, e2
 
+
+(* [next_line_is_else lines] returns true if the first line of lines
+is an "ELSE" instruction. *)
 let next_line_is_else lines =
   if lines = [] then false
   else
@@ -76,7 +111,14 @@ let next_line_is_else lines =
     if s = [] then false
     else if hd s = "ELSE" then true
     else false
-                        
+
+
+(* [parse_instruction position s lines] parses the next instruction that starts
+with the line s at the position position. 
+If needed, it will parse the rest of the lines to complete the instruction 
+(in the case of an IF or WHILE instruction).
+
+Returns the instruction and the list of lines that were not parsed. *)
 let rec parse_instruction position s lines =
   let fail p = ksprintf failwith "Invalid line %d" p in
   let indent = compute_indent s in
@@ -104,6 +146,13 @@ let rec parse_instruction position s lines =
      let new_p, new_s = hd lines in
      parse_instruction new_p new_s (tl lines)
   | _ -> fail position
+(* [parse_block lines ident acc] parses the block starting from the first
+element of lines. 
+It parses all the instructions of the block, until the indent of the line goes
+back up (= it is the end of the block).
+All the instructions are stored into the acc argument, along with their line position.
+
+Returns the list of instructions and the list of lines that were not parsed. *)
 and parse_block lines indent acc =
   if lines = [] then List.rev acc, []
   else 

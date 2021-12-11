@@ -5,6 +5,10 @@ open List
 
 module NameTable = Map.Make(String)
 
+(* [eval_expr e env]  evaluates the expression e with the current environment
+variables in env and returns the result as an int.
+Fails if it tries to access a variable that has ot been initialized yet, 
+or if it tries to compute a division by 0. *)
 let eval_expr e env =
   let rec eval e = match e with
     | Num(n) -> n
@@ -22,6 +26,10 @@ let eval_expr e env =
        | Mod -> (eval e1) mod (eval e2)
   in eval e
 
+
+(* [eval_cond c env] evaluates the condition c with the current environment
+variables in env and returns the result as a boolean.
+Fails if the expressions in the condition cannot be evaluated (see eval_expr) *)
 let eval_cond c env =
   let e1, comp, e2 = c in
   let v1 = eval_expr e1 env in
@@ -34,16 +42,32 @@ let eval_cond c env =
   | Gt -> v1 > v2
   | Ge -> v1 >= v2
 
+
+(* [print_value_expr e env] evaluates the expression e with the current
+environment variables in env and prints the result to stdout. Then also prints
+a newline.
+Fails if the expression cannot be evaluated (see eval_expr) *)
 let print_value_expr e env =
   let v = eval_expr e env in
   print_int v;
   print_string "\n"
 
+
+
+(* [read_value n env] :
+- prints to stdout the name of the variable, a space, '?' and another space
+- waits for user input
+- if the user input is an int, adds it into the NameTable with the key n
+and returns the updated NameTable
+- if the user input is not an int, starts again until a valid input is entered *)
 let rec read_value n env =
   printf "%s ? " n;
   try NameTable.add n (read_int()) env
   with Failure _ -> printf "Not an int ! Please rety \n"; read_value n env            
 
+
+(* [eval_block p env] evaluates the program p with the current environment
+variables in env. It returns the updated environment variables. *)                     
 let rec eval_block (p:program) env =
   match p with
   | [] -> env
