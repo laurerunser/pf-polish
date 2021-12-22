@@ -18,10 +18,10 @@ tests.report.svg: tests.report
 	./buildbadge tests > tests.report.svg
 
 binary:
-	dune build polish.exe
+	dune build main.exe
 
 byte:
-	dune build polish.bc
+	dune build main.bc
 
 clean:
 	dune clean
