@@ -1,8 +1,0 @@
-open Polish
-open Eval
-open Printf
-module NameTable : Map.S with type key = name
-
-val simplify_expr : expr -> int NameTable.t -> expr
-
-val simplify_cond : cond -> int NameTable.t -> cond

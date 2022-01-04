@@ -3,8 +3,6 @@ open Polish
 open Printf
 open List
 
-module NameTable = Map.Make(String)
-
 (* [eval_expr e env]  evaluates the expression e with the current environment
 variables in env and returns the result as an int.
 Fails if it tries to access a variable that has ot been initialized yet, 

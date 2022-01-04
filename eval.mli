@@ -1,9 +1,5 @@
 open Polish
 
-module NameTable : Map.S with type key = name
-(* The environment variables will be stored in a NameTable which is an assoc
-table indexed by strings. This is more efficient than simple assoc lists. *)
-
 val eval_block : program -> int NameTable.t -> int NameTable.t
 (* [eval_block p env] evaluates the program p with the current environment
 variables in env. It returns the updated environment variables. *)
