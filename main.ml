@@ -21,12 +21,14 @@ let eval_polish p =
 let analyse_vars p = print_vars p
 
 let usage () =
-  print_string "Polish : analyse statique d'un mini-langage\n";
+  print_string "Polish : static analysis of a mini language\n";
   print_string "usage: option filename \n";
-  print_string "options supported :\n";
+  print_string "Supported option:\n";
   print_string "-reprint : parse the polish file and reprint it\n";
   print_string "-eval : evaluate the polish file\n";
-  print_string "-simpl : simplify the polish file and print the result\n"
+  print_string "-simpl : simplify the polish file and print the result\n";
+  print_string "-vars : performs a static analysis of the variables and prints :\n-the names of all the variables";
+  print_string "in the program\n-the name of all the variables that might have been accessed before being initialized\n"
 
 let main () =
   match Sys.argv with
