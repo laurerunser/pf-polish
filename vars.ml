@@ -26,10 +26,12 @@ let rec find_vars (p:program) vars vars_ok vars_not_ok =
     let vars, vars_ok, vars_not_ok = find_vars_expr e vars vars_ok vars_not_ok in
     find_vars xs vars vars_ok vars_not_ok
   | (i, Read(n))::xs -> find_vars xs (Names.add n vars) (Names.add n vars_ok) vars_not_ok
-  | (i, If(c, b, b2))::xs -> 
+  | (i, If(c, b, b2))::xs ->
       let vars, vars_ok, vars_not_ok = find_vars_if c b b2 vars vars_ok vars_not_ok in
       find_vars xs vars vars_ok vars_not_ok
-  | (i, While(c, b))::xs -> find_vars_while c b vars vars_ok vars_not_ok
+  | (i, While(c, b))::xs -> 
+    let vars, vars_ok, vars_not_ok = find_vars_while c b vars vars_ok vars_not_ok in
+    find_vars xs vars vars_ok vars_not_ok
 and find_vars_if c b b2 vars vars_ok vars_not_ok =
   let vars, vars_ok, vars_not_ok = find_vars_cond c vars vars_ok vars_not_ok in
   let vars1, vars_ok1, vars_not_ok1 = find_vars b vars vars_ok vars_not_ok in
