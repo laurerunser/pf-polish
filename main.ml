@@ -5,6 +5,7 @@ open Eval
 open Simpl
 open Printf
 open Vars
+open Sign
 
 let read_polish filename = Parse.parse_file filename
 
@@ -36,6 +37,7 @@ let main () =
   | [|_;"-eval";file|] -> eval_polish (read_polish file)
   | [|_;"-simpl";file|] -> print_polish (simplify_polish (read_polish file))
   | [|_;"-vars";file|] -> analyse_vars (read_polish file)
+  | [|_;"-sign";file|] -> test ()
   | _ -> usage ()
 
 let () = main ()
