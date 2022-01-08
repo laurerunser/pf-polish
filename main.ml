@@ -17,7 +17,7 @@ let eval_polish p =
   let env = eval_block p (NameTable.empty) in
   (* eval return type is not unit, so needs an empty print statement to compile *)
   ()
-
+  
 let analyse_vars p = print_vars p
 
 let usage () =

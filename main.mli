@@ -15,5 +15,15 @@ This printing method removes all of the COMMENT lines. *)
 val eval_polish : program -> unit
 (* [eval_polish p] evaluates the program and prints its result to stdout *)
 
+val simplify_polish : program -> program
+(* [simplify_polish p] simplifies the code of the polish program and returns the
+updated program *)
+
+val analyse_vars : program -> unit
+(* [analyse_vars p] performs a static analysis of the program p and prints 2 lines :
+- the names of all the variables that appear in the program
+- the names of all the variables that are accessed in the program but have maybe not be 
+initialized beforehand. *)
+
 val main : unit -> unit
 (* Parses the CLI arguments and launches the appropriate functions *)                     
