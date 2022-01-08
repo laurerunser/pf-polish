@@ -62,7 +62,7 @@ and print_line line indent =
      printf "IF "; print_cond condition; printf "\n";
      print_block block (indent+1);
      if block2 <> [] then
-       printf "ELSE\n"; print_block block2 (indent+1)
+      print_indent indent; printf "ELSE \n"; print_block block2 (indent+1)
   | While(condition, block) ->
      printf "WHILE "; print_cond condition; printf "\n";
      print_block block (indent+1)
