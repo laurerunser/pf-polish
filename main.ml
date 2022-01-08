@@ -4,6 +4,7 @@ open Print
 open Eval
 open Simpl
 open Printf
+open Vars
 
 let read_polish filename = Parse.parse_file filename
 
@@ -16,6 +17,8 @@ let eval_polish p =
   let env = eval_block p (NameTable.empty) in
   (* eval return type is not unit, so needs an empty print statement to compile *)
   ()
+
+let analyse_vars p = print_vars p
 
 let usage () =
   print_string "Polish : analyse statique d'un mini-langage\n";
@@ -30,6 +33,7 @@ let main () =
   | [|_;"-reprint";file|] -> print_polish (read_polish file)
   | [|_;"-eval";file|] -> eval_polish (read_polish file)
   | [|_;"-simpl";file|] -> print_polish (simplify_polish (read_polish file))
+  | [|_;"-vars";file|] -> analyse_vars (read_polish file)
   | _ -> usage ()
 
 let () = main ()

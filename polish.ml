@@ -46,4 +46,8 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 
+(* Stores variables and their values during execution or simplification *)
 module NameTable = Map.Make(String)
+
+(* Stores initialized variables during analysis *)
+module Names = Set.Make(String)
