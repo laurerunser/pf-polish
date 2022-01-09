@@ -40,7 +40,7 @@ let rec simplify_block (p:program) env =
   match p with
   | [] -> []
   | (i, Print(e))::xs  -> (i, Print(simplify_expr e env))::(simplify_block xs env)
-  | (i, Read(n))::xs -> (i, Read(n))::simplify_block xs env
+  | (i, Read(n))::xs -> (i, Read(n))::simplify_block xs (NameTable.remove n env)
   | (i, Set(n, e))::xs ->
       let e2 = simplify_expr e env in
       (i, Set(n, e2))::simplify_block xs
