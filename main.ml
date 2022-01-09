@@ -21,6 +21,9 @@ let eval_polish p =
   
 let analyse_vars p = print_vars p
 
+let analyse_signs p = () 
+(* first simplify the program !! *)
+
 let usage () =
   print_string "Polish : static analysis of a mini language\n";
   print_string "usage: option filename \n";

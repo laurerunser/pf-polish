@@ -51,3 +51,7 @@ module NameTable = Map.Make(String)
 
 (* Stores initialized variables during analysis *)
 module Names = Set.Make(String)
+
+type sign = Neg | Zero | Pos | Error
+
+module Signs = Map.Make(String)
