@@ -175,7 +175,7 @@ let rec compare_2_signs s1 s2 comp =
   | Pos, Pos | Neg, Neg -> true
   | Pos, Neg -> compare_2_signs s2 s1 (reverse_comp comp)
 
-let rec compare_2_expr e1 e2 comp signs =
+let compare_2_expr e1 e2 comp signs =
   let signs_e1 = signs_var e1 signs in
   let signs_e2 = find_signs_expr e1 (Var(e1)) signs in
   let rec loop_e2 s1 l2 b acc =

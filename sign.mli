@@ -1,4 +1,3 @@
 open Polish
 
-
-val test : unit -> unit
+val print_signs : program -> unit

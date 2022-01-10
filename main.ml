@@ -21,7 +21,7 @@ let eval_polish p =
   
 let analyse_vars p = print_vars p
 
-let analyse_signs p = () 
+let analyse_signs p = print_signs p
 (* first simplify the program !! *)
 
 let usage () =
@@ -40,7 +40,7 @@ let main () =
   | [|_;"-eval";file|] -> eval_polish (read_polish file)
   | [|_;"-simpl";file|] -> print_polish (simplify_polish (read_polish file))
   | [|_;"-vars";file|] -> analyse_vars (read_polish file)
-  | [|_;"-sign";file|] -> test ()
+  | [|_;"-sign";file|] -> analyse_signs (simplify_polish (read_polish file))
   | _ -> usage ()
 
 let () = main ()
