@@ -127,6 +127,7 @@ let remove_signs var s_to_remove signs_list signs =
   let s_to_add = if List.mem Error signs_list then s3 else Error::s3 in
   add_signs var s_to_add signs_list signs
 
+ (* for an expr : put "" as the name (var); for the Var(v) put v as the var *) 
 let rec compare_var_and_num var n comp signs =
   let signs_list = signs_var var signs in
   if signs_list = [Error] then false, signs (* impossible *)
@@ -143,9 +144,13 @@ let rec compare_var_and_num var n comp signs =
             else false, signs (* impossible *)
     | Gt -> if List.mem Pos signs_list then true, add_signs var [Pos] signs_list signs (* ok, and the var is now Pos (or Error) only *)
             else false, signs (* impossible *)
-    | Le -> if List.mem Zero signs_list || List.mem Neg signs_list then true, add_signs var [Neg; Zero] signs_list signs
+    | Le -> if List.mem Zero signs_list && List.mem Neg signs_list then true, add_signs var [Neg; Zero] signs_list signs
+            else if List.mem Zero signs_list then true, add_signs var [Zero] signs_list signs
+            else if List.mem Neg signs_list then true, add_signs var [Neg] signs_list signs
             else false, add_signs var [Pos] signs_list signs
-    | Ge -> if List.mem Zero signs_list || List.mem Pos signs_list then true, add_signs var [Pos; Zero] signs_list signs
+    | Ge -> if List.mem Zero signs_list && List.mem Pos signs_list then true, add_signs var [Zero; Pos] signs_list signs
+            else if List.mem Zero signs_list then true, add_signs var [Zero] signs_list signs
+            else if List.mem Pos signs_list then true, add_signs var [Pos] signs_list signs
             else false, add_signs var [Neg] signs_list signs
   else if n > 0 then
     match comp with
@@ -186,8 +191,10 @@ let rec compare_2_signs s1 s2 comp =
   | Pos, Neg -> compare_2_signs s2 s1 (reverse_comp comp)
 
 let compare_2_expr e1 e2 comp signs current_line error_line =
-  let signs_e1 = signs_var e1 signs in
-  let signs_e2, error_line = find_signs_expr e1 (Var(e1)) signs current_line error_line in
+  (*let signs_e1 = signs_var e1 signs in*)
+  let signs_e1, error_line1 = find_signs_expr "" e1 signs current_line error_line in
+  let signs_e2, error_line2 = find_signs_expr "" e2 signs current_line error_line in
+  let error_line = if error_line1 = -1 then error_line2 else min error_line1 error_line2 in
   let rec loop_e2 s1 l2 b acc =
     match l2 with
     | [] -> b, acc
@@ -216,15 +223,23 @@ let rec sign_cond c signs current_line (error_line:int) =
   | Num(n), Var(var) -> 
     let b, signs = compare_var_and_num var n (reverse_comp comp) signs in b, signs, error_line
   | Var(var), e2 -> 
-    let (b, signs_var, signs_e), error_line = compare_2_expr var e2 comp signs current_line error_line in
+    let (b, signs_var, signs_e), error_line = compare_2_expr e1 e2 comp signs current_line error_line in
     let signs = Signs.add var signs_var (Signs.remove var signs) in
     (* updates the signs of the var *)
     (* TODO ?? maybe should also determine stuff about the vars inside the expr (if any)
        with the new info we got about the sign of the expression *)
     b, signs, error_line
   | e1, Var(var) -> sign_cond (Var(var), reverse_comp comp, e1) signs current_line error_line
-  | _ -> failwith ""
-(* TODO : missing Num,Op and Op,Num*)
+  | e1, e2 ->
+    let (_, _, _), error_line = compare_2_expr e1 e2 comp signs current_line error_line in 
+    true, signs, error_line 
+  (* The last line compares Op and Num, or 2 Op => it is very difficult to process
+     (need to solve equations) and I don't have time to implement it. 
+     Because I already simplified the program before launching the sign analysis, 
+     the most basic cases are already caught in the other patterns. 
+     So I decided to say the expression is possibly true, and to return the signs 
+      with no changes. I do launch the comparaison of the two to make sure I catch
+      any division by 0 errors in the expressions. *)
 
 (**********************************************)
 
