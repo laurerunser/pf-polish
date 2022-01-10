@@ -32,7 +32,8 @@ let usage () =
   print_string "-eval : evaluate the polish file\n";
   print_string "-simpl : simplify the polish file and print the result\n";
   print_string "-vars : performs a static analysis of the variables and prints :\n-the names of all the variables";
-  print_string "in the program\n-the name of all the variables that might have been accessed before being initialized\n"
+  print_string "in the program\n-the name of all the variables that might have been accessed before being initialized\n";
+  print_string "-sign : the program performs an analysis of the signs of the variables, and the possible errors of division by zero.\n"
 
 let main () =
   match Sys.argv with
