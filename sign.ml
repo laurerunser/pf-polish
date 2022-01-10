@@ -225,8 +225,19 @@ let rec signs_program p signs =
   | (i, If(c, b, b2))::xs -> signs_program xs (signs_if c b b2 signs)
   | (i, While(c, b))::xs -> signs_program xs (signs_while c b signs)
 and signs_if c b b2 signs = 
-
-  signs
+  (* See if the condition can be satisfied and compute the signs propagation *)
+  let res1, signs1 = sign_cond c signs in
+  let e1, comp, e2 = c in
+  let res2, signs2 = sign_cond (e1, reverse_comp comp, e2) signs in
+  (* If the condition can be satisfied, compute the signs of the block *)
+  let signs1 = if res1 then signs_program b signs1 else Signs.empty in 
+  let signs2 = if res2 then signs_program b2 signs2 else Signs.empty in
+  (* Join both environments *)
+  Signs.merge (fun var x y -> 
+                if Option.is_none x then y
+                else if Option.is_none y then x
+                else Some(remove_duplicates (Option.get x)@(Option.get y))) 
+              signs1 signs2
 and signs_while c b signs = signs
 
 
