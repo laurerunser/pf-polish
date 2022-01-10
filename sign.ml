@@ -258,7 +258,20 @@ and signs_if c b b2 signs current_line error_line =
                 else Some(remove_duplicates (Option.get x)@(Option.get y))) 
               signs1 signs2
   , error_line
-and signs_while c b signs current_line error_line = signs, error_line
+and signs_while c b signs current_line error_line = 
+  let e1, comp, e2 = c in
+  (* loop_while computes the fixed-point for the signs*)
+  let rec loop_while signs0 current_line error_line =
+    let res, signs1, error_line1 = sign_cond c signs current_line error_line in 
+    let signs1, error_line2 = signs_program b signs1 error_line in 
+    let error_line = if error_line1 = -1 then error_line2 else min error_line1 error_line2 in
+    if signs1 = signs0 then signs0
+    else loop_while signs1 current_line error_line
+  in 
+  (* propagating the opposite condition into the fixed-point signs.
+     This is because when we get out of the while loop, it means we didn't satisfy the condition anymore. *)
+  let res2, signs2, error_line = sign_cond (e2, reverse_comp comp, e1) signs current_line error_line in 
+  signs2, error_line
 
 let print_signs p =
   let signs, error_line = signs_program p Signs.empty (-1) in
